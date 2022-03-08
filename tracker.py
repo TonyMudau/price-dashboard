@@ -35,16 +35,7 @@ def request_data_ope(store, prodslist,date_range):
     return final
 
 
-# Load data
 date_today = date.today().strftime("%Y-%m-%d")
-latest_pnp_csv = pd.read_csv(r'C:\Users\mudau\Desktop\Food Prices API\Data\pnp\PnpMainTable.csv')
-latest_pnpdrinks_csv = pd.read_csv(r'C:\Users\mudau\Desktop\Food Prices API\Data\pnpdrinks\PnpdrinksMainTable.csv')
-latest_spar_csv = pd.read_csv(r'C:\Users\mudau\Desktop\Food Prices API\Data\spar\SparMainTable.csv')
-latest_makro_csv = pd.read_csv(r'C:\Users\mudau\Desktop\Food Prices API\Data\makro\MakroMainTable.csv')
-latest_makroliq_csv = pd.read_csv(r'C:\Users\mudau\Desktop\Food Prices API\Data\makrodrinks\MakrodrinksMainTable.csv')
-latest_game_csv = pd.read_csv(r'C:\Users\mudau\Desktop\Food Prices API\Data\game\GameMainTable.csv')
-latest_clicks_csv = pd.read_csv(r'C:\Users\mudau\Desktop\Food Prices API\Data\clicks\ClicksMainTable.csv')
-latest_dischem_csv = pd.read_csv(r'C:\Users\mudau\Desktop\Food Prices API\Data\dischem\DischemMainTable.csv')
 
 def get_prodnames():
     shop =  pd.read_csv(r'C:\Users\mudau\Desktop\Food Prices API\Data\pnp\PnpMainTable.csv')
@@ -140,7 +131,7 @@ app.layout = html.Div(
 							id = "shop",
 							multi = False,
 							searchable = True,
-							value = "Pick n Pay",
+							value = "pnp",
 							placeholder = "Select Store",
 							options = [{'label': 'Pick n Pay', 'value': 'pnp'},
                                        {'label': 'Pick n Pay Liquor', 'value': 'pnpliq'},
@@ -165,6 +156,7 @@ app.layout = html.Div(
             ),
             # products dropdown
             dcc.Dropdown(id = "productnames", 
+                           value = "PnP UHT Full Cream Milk 1l x 6",
                          multi=True),
                         
                         
@@ -179,13 +171,13 @@ app.layout = html.Div(
             ),
 
             # Range slider
-            dcc.RangeSlider(
-							id = "dates_range",
-              #min = datetime.date(2021, 12, 15),
-              #max = datetime.date(2022, 3, 7),
-              dots = False,
-              #value = [min, max]
-						)
+            dcc.DatePickerRange(
+                    id='dates_range',
+                    min_date_allowed=date(2021, 11, 15),
+                    max_date_allowed=date(2022, 9, 19),
+                    initial_visible_month=date(2022, 1, 5),
+                    end_date=date(2022, 3, 8)
+    )
           ],
           className = "create_container three columns"
         ),
@@ -203,27 +195,11 @@ app.layout = html.Div(
             )
           ],
           className = "create_container six columns"
-        ),
-        
-        
-        
-        
-        
-        
+        )
         
         
         # (Column three) Pie chart
-        html.Div(
-          [
-            dcc.Graph(
-              id = "pie_chart",
-              config = {
-                "displayModeBar": "hover"
-              }
-            )
-          ],
-          className = "create_container three columns"
-        )
+
       ],
       className = "row flex-display"
     )
@@ -280,13 +256,19 @@ def get_prodnames(shop):
   ),
   Input(
     component_id = "dates_range",
-    component_property = "value"
+    component_property = "start_date"
+  ),
+  Input(
+    component_id = "dates_range",
+    component_property = "end_date"
   )
 )
 
 
-def create_plot(shop, productnames, dates_range):
-    response = requests.get(f'https://openpricengine.com/api/v0.1/{shop}/products/query?list={productnames}&range=2022-03-01to2022-03-07')
+def create_plot(shop, productnames, start_date, end_date):
+    print(start_date)
+    print(end_date)
+    response = requests.get(f'https://openpricengine.com/api/v0.1/{shop}/products/query?list={productnames}&range={start_date}to{end_date}')
     json_list1 = response.json()
     df = pd.DataFrame.from_records(json_list1)
     emp = []
@@ -297,14 +279,16 @@ def create_plot(shop, productnames, dates_range):
         tails = pd.DataFrame(details).T.reset_index(drop=True)
         all_table = pd.concat([tails,dates], axis=1)
         emp.append(all_table)
-    data_table = pd.concat(emp)
-    DF = data_table.iloc[:,3:].T
+    data_tables = pd.concat(emp)
+    data_table = data_tables.drop(labels=['Store','Category','Product URL'], axis=1)
+    pd.set_option('display.max_columns', None)
+    pd.set_option('display.max_rows', None)
+    DF = data_table.T
     DF.columns = DF.iloc[0]
-    DF.drop(DF.index[0], inplace = True)  
-    k = productnames
-    print(k)
-    final = DF[k]
-    fig = px.line(final, labels=dict(value = 'Price (ZAR)', index= 'Date'),markers=False, title=f"{shop}")
+    DF.drop(DF.index[0], inplace = True) 
+    selectedprods = productnames
+    final = DF[selectedprods]
+    fig = px.line(final, labels=dict(value = 'Price (ZAR)', index= 'Date'), title=f"{shop}")
     return fig
 
 
