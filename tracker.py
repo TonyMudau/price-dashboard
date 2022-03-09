@@ -37,21 +37,11 @@ def request_data_ope(store, prodslist,date_range):
 
 date_today = date.today().strftime("%Y-%m-%d")
 
-def get_prodnames():
-    shop =  pd.read_csv(r'C:\Users\mudau\Desktop\Food Prices API\Data\pnp\PnpMainTable.csv')
-    prod_names = shop['Product Name']
-    prods_list_json =[]
-    for i in range(len(prod_names)):
-        names = {"label": shop['Product Name'][i], 'value': shop['Product Name'][i]}
-        prods_list_json.append(names)
-    return prods_list_json
-
-
 
 
 
 # Instanciate the app
-app = dash.Dash(__name__, meta_tags = [{"name": "viewport", "content": "width=device-width"}])
+app = dash.Dash(__name__, meta_tags = [{"name": "viewport", 'content': 'width=device-width, initial-scale=1.0, maximum-scale=1.2, minimum-scale=0.5,' }])
 
 # Build layout
 app.layout = html.Div(
@@ -141,7 +131,7 @@ app.layout = html.Div(
                                        {'label': 'Game', 'value': 'Game'},
                                        {'label': 'Dischem', 'value': 'Dischem'},
                                        {'label': 'Clicks', 'value': 'Clicks'},],
-							className = "dcc_compon"
+							className = "row flex-display"
 						),        
                         
                         
@@ -176,7 +166,14 @@ app.layout = html.Div(
                     min_date_allowed=date(2021, 11, 15),
                     max_date_allowed=date(2022, 9, 19),
                     initial_visible_month=date(2022, 1, 5),
-                    end_date=date(2022, 3, 8)
+                    start_date=date(2021, 11, 15),
+                    end_date=date_today,
+                    style = {
+                        "color": "green",
+                        "background-color": "#010915",
+                        "display": "flex",
+                      },
+             className = "dcc_compon"
     )
           ],
           className = "create_container three columns"
@@ -194,7 +191,7 @@ app.layout = html.Div(
               }
             )
           ],
-          className = "create_container six columns"
+          className = "create_container nine columns"
         )
         
         
@@ -235,6 +232,7 @@ def get_prodnames(shop):
     for i in (prod_names):
         names = {"label": i, 'value': i}
         prods_list_json.append(names)
+    print("got names")
     return prods_list_json
 
 
@@ -270,6 +268,7 @@ def create_plot(shop, productnames, start_date, end_date):
     print(end_date)
     response = requests.get(f'https://openpricengine.com/api/v0.1/{shop}/products/query?list={productnames}&range={start_date}to{end_date}')
     json_list1 = response.json()
+    print(json_list1)
     df = pd.DataFrame.from_records(json_list1)
     emp = []
     for i in range(len(df)):
@@ -281,13 +280,12 @@ def create_plot(shop, productnames, start_date, end_date):
         emp.append(all_table)
     data_tables = pd.concat(emp)
     data_table = data_tables.drop(labels=['Store','Category','Product URL'], axis=1)
-    pd.set_option('display.max_columns', None)
-    pd.set_option('display.max_rows', None)
     DF = data_table.T
     DF.columns = DF.iloc[0]
     DF.drop(DF.index[0], inplace = True) 
     selectedprods = productnames
     final = DF[selectedprods]
+    print(final)
     fig = px.line(final, labels=dict(value = 'Price (ZAR)', index= 'Date'), title=f"{shop}")
     return fig
 
