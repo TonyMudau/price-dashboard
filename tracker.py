@@ -9,6 +9,8 @@ import pandas as pd
 from datetime import datetime, date
 import requests
 import datetime
+import dash_bootstrap_components as dbc
+
 #==========================================================================
 
 """
@@ -18,7 +20,7 @@ import datetime
 """
 #==========================================================================
 
-
+#requests ope data and creates a df
 def request_data_ope(store, prodslist,date_range):
     response = requests.get(f'https://openpricengine.com/api/v0.1/{store}/products/query?list={prodlist}&range={date_range}')
     json_list = response.json()
@@ -41,7 +43,7 @@ date_today = date.today().strftime("%Y-%m-%d")
 
 
 # Instanciate the app
-app = dash.Dash(__name__, meta_tags = [{"name": "viewport", 'content': 'width=device-width, initial-scale=1.0, maximum-scale=1.2, minimum-scale=0.5,' }])
+app = dash.Dash(__name__,  external_stylesheets=[dbc.themes.BOOTSTRAP], meta_tags = [{"name": "viewport", 'content': 'width=device-width, initial-scale=1.0, maximum-scale=1.2, minimum-scale=0.5,' }])
 
 # Build layout
 app.layout = html.Div(
@@ -69,7 +71,20 @@ app.layout = html.Div(
 										"margin-top": "0px",
 										"color": "white"
 									}
-								)
+								),
+                        html.Div(
+                            [
+                            dbc.ButtonGroup(
+                                [dbc.Button("About"), 
+                                dbc.Button("OPE API"), 
+                                dbc.Button("LearningTool")],
+                                size="lg",
+                                className="d-grid gap-2 col-6 mx-auto",
+                            ),
+
+                                            ],
+      
+                                     ),                    
 							]
 						)
 					],
@@ -131,7 +146,7 @@ app.layout = html.Div(
                                        {'label': 'Game', 'value': 'Game'},
                                        {'label': 'Dischem', 'value': 'Dischem'},
                                        {'label': 'Clicks', 'value': 'Clicks'},],
-							className = "row flex-display"
+							className = "fix_label"
 						),        
                         
                         
@@ -147,11 +162,13 @@ app.layout = html.Div(
             # products dropdown
             dcc.Dropdown(id = "productnames", 
                            value = "PnP UHT Full Cream Milk 1l x 6",
-                         multi=True),
+                         multi=True,
+                         persistence=True,
+                         ),
                         
                         
             
-            # Title for range slider
+            # Title for Date range
             html.P(
               children = "Select Date Range",
               className = "fix_label",
@@ -160,7 +177,7 @@ app.layout = html.Div(
               }
             ),
 
-            # Range slider
+            #Date range 
             dcc.DatePickerRange(
                     id='dates_range',
                     min_date_allowed=date(2021, 11, 15),
@@ -191,7 +208,7 @@ app.layout = html.Div(
               }
             )
           ],
-          className = "create_container nine columns"
+          className = "create_container eight columns g-0 ms-auto flex-nowrap mt-3 mt-md-0"
         )
         
         
