@@ -10,7 +10,8 @@ from datetime import datetime, date
 import requests
 import datetime
 import dash_bootstrap_components as dbc
-
+from dash import Output, State, html, no_update
+import random
 #==========================================================================
 
 """
@@ -35,6 +36,7 @@ def request_data_ope(store, prodslist,date_range):
         emp.append(v)
     final = pd.concat(emp)
     return final
+    
 
 
 date_today = date.today().strftime("%Y-%m-%d")
@@ -57,11 +59,14 @@ app.layout = html.Div(
 						html.Div(
 							[
 								# Title
+                                
 								html.H1(
-									children = "Daily Price Tracker",
+									children = "Daily Price Tracker 🍕",
 									style = {
 										"margin-bottom": "0px",
-										"color": "white"
+										"color": "white",
+                                        "font-weight": "bold"
+                                        
 									}
 								),
 								# Subtitle
@@ -69,26 +74,75 @@ app.layout = html.Div(
 									children = f"{date_today}",
 									style = {
 										"margin-top": "0px",
-										"color": "white"
+										"color": "white",
+                                        
 									}
 								),
                         html.Div(
                             [
                             dbc.ButtonGroup(
-                                [dbc.Button("About"), 
-                                dbc.Button("OPE API"), 
-                                dbc.Button("LearningTool")],
-                                size="lg",
-                                className="d-grid gap-2 col-6 mx-auto",
-                            ),
-
+                                [dbc.Button("About", id="open-offcanvas", n_clicks=0),
+                                 dbc.Offcanvas(
+                                            [html.P(
+                                                "Daily Price tracker is a free to use dashboard that allows consumers to see the historical "
+                                                "prices of their favourite products from retail stores. This is to help consumers compare prices and find the best time "
+                                                "to buy a product at the best price. "
+                                                "The Daily Price tracker  uses the Openpricengine API to get realtime price data."
+                                                "You are able to set email notifications for price changes on products. "),
+                                            dbc.Button("Buy developer a pizza 😉",id="simple-toast-toggle1",n_clicks=0),
+                                                dbc.Toast(
+                                                    [html.P("FNB"),html.P("Acc 62530854589")],
+                                                    id="simple-toast1",
+                                                    header="Donate",
+                                                    icon="success",
+                                                    dismissable=True,
+                                                    is_open=False,
+                                                ),],
+                                            id="offcanvas",
+                                            title="About Daily Price Tracker",
+                                            is_open=False),
+                                            
+                                            
+                                            
+                                            
+                                            
+                                #---Track button
+                                dbc.Button("Track",
+                                                id="simple-toast-toggle",
+                                                color="primary",
+                                                className="mb-3",
+                                                n_clicks=0,
+                                                ),
+                                                #------Toast
+                                                dbc.Toast(
+                                                    [html.P("Would you like to add the following products to Notification? Add your Email:", className="mb-0"),
+                                                    html.P(id = 'prods', className="mb-0"),
+                                                    dbc.FormFloating(
+                                                                [
+                                                                dbc.Input(type="email", placeholder="example@internet.com"),
+                                                                dbc.Label("Email address"),
+                                                                dbc.Button("Notify Me", color="primary"),
+                                                                ]
+                                                                )
+                                                            ],
+                                                    id="simple-toast",
+                                                    header="Track Products",
+                                                    icon="primary",
+                                                    dismissable=True,
+                                                    is_open=False,
+                                                    style={"position": "fixed", "top": 66, "right": 10, "width": 350},
+                                                ),
                                             ],
-      
+                                size="lg",
+                                style = {"color":"danger"},
+                                className="gap-2 col-6 mx-auto",
+                            ),
+                              ],   
                                      ),                    
 							]
 						)
 					],
-					className = "six column",
+					className = "nine column",
 					id = "title"
 				)
 			],
@@ -163,7 +217,8 @@ app.layout = html.Div(
             dcc.Dropdown(id = "productnames", 
                            value = "PnP UHT Full Cream Milk 1l x 6",
                          multi=True,
-                         persistence=True,
+                         style = {
+								"color": "white"}
                          ),
                         
                         
@@ -183,7 +238,7 @@ app.layout = html.Div(
                     min_date_allowed=date(2021, 11, 15),
                     max_date_allowed=date(2022, 9, 19),
                     initial_visible_month=date(2022, 1, 5),
-                    start_date=date(2021, 11, 15),
+                    start_date= date(2022, 1, 1),
                     end_date=date_today,
                     style = {
                         "color": "green",
@@ -204,7 +259,7 @@ app.layout = html.Div(
             dcc.Graph(
               id = "bar_chart",
               config = {
-                "displayModeBar": "hover"
+                "displayModeBar": False
               }
             )
           ],
@@ -261,6 +316,10 @@ def get_prodnames(shop):
     component_id = "bar_chart",
     component_property = "figure"
   ),
+  Output(
+    component_id = "prods",
+    component_property = "children"
+  ),
   Input(
     component_id = "shop",
     component_property = "value"
@@ -281,12 +340,13 @@ def get_prodnames(shop):
 
 
 def create_plot(shop, productnames, start_date, end_date):
-    print(start_date)
     print(end_date)
+    print(start_date)
     response = requests.get(f'https://openpricengine.com/api/v0.1/{shop}/products/query?list={productnames}&range={start_date}to{end_date}')
     json_list1 = response.json()
-    print(json_list1)
+    #print(json_list1)
     df = pd.DataFrame.from_records(json_list1)
+    print(df)
     emp = []
     for i in range(len(df)):
         price_date = df['Price over time'][i]
@@ -304,7 +364,53 @@ def create_plot(shop, productnames, start_date, end_date):
     final = DF[selectedprods]
     print(final)
     fig = px.line(final, labels=dict(value = 'Price (ZAR)', index= 'Date'), title=f"{shop}")
-    return fig
+    fig.update_layout(annotations=[], overwrite=True)
+    fig.update_layout(legend=dict(
+        orientation="h",
+        yanchor="bottom",
+        y=1.02,
+        xanchor="right",
+        x=1))
+    return fig, f'{selectedprods}'
+
+
+@app.callback(
+    Output("offcanvas", "is_open"),
+    Input("open-offcanvas", "n_clicks"),
+    [State("offcanvas", "is_open")],
+)
+def toggle_offcanvas(n1, is_open):
+    if n1:
+        return not is_open
+    return is_open
+    
+    
+@app.callback(
+    Output("simple-toast", "is_open"),
+    [Input("simple-toast-toggle", "n_clicks")],
+)
+def open_toast(n):
+    if n == 0:
+        return no_update
+    return True
+
+
+def toggle_offcanvas(n1, is_open):
+    if n1:
+        return not is_open
+    return is_open
+    
+    
+@app.callback(
+    Output("simple-toast1", "is_open"),
+    [Input("simple-toast-toggle1", "n_clicks")],
+)
+def open_toast(n):
+    if n == 0:
+        return no_update
+    return True
+
+
 
 
 # Run the app
