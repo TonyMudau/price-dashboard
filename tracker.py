@@ -1,6 +1,4 @@
 import dash
-import dash_html_components as html
-import dash_core_components as dcc
 from dash.dependencies import Input, Output, State
 from numpy.lib.twodim_base import triu_indices_from
 import plotly.graph_objs as go
@@ -10,8 +8,11 @@ from datetime import datetime, date
 import requests
 import datetime
 import dash_bootstrap_components as dbc
-from dash import Output, State, html, no_update
+from dash import Output, State, html, no_update, dcc
 import random
+# Import the email modules we'll need
+import smtplib
+from email.message import EmailMessage
 #==========================================================================
 
 """
@@ -101,38 +102,28 @@ app.layout = html.Div(
                                             id="offcanvas",
                                             title="About Daily Price Tracker",
                                             is_open=False),
-                                            
-                                            
-                                            
-                                            
-                                            
+            
                                 #---Track button
-                                dbc.Button("Track",
-                                                id="simple-toast-toggle",
-                                                color="primary",
-                                                className="mb-3",
-                                                n_clicks=0,
-                                                ),
-                                                #------Toast
-                                                dbc.Toast(
-                                                    [html.P("Would you like to add the following products to Notification? Add your Email:", className="mb-0"),
-                                                    html.P(id = 'prods', className="mb-0"),
-                                                    dbc.FormFloating(
-                                                                [
-                                                                dbc.Input(type="email", placeholder="example@internet.com"),
+                             dbc.Button("Track", id="open-offcanvas1", n_clicks=0),
+                                 dbc.Offcanvas(
+                                            [dbc.Progress(id="progress", style={"height": "30px"}),
+                                            html.P("If you would like price change notifications on the following selected "
+                                                     "products, click 'Notify'"),
+                                             html.P(id="prods"),
+                                             html.P(' '),
+                                             dbc.Row([
                                                                 dbc.Label("Email address"),
-                                                                dbc.Button("Notify Me", color="primary"),
-                                                                ]
-                                                                )
-                                                            ],
-                                                    id="simple-toast",
-                                                    header="Track Products",
-                                                    icon="primary",
-                                                    dismissable=True,
-                                                    is_open=False,
-                                                    style={"position": "fixed", "top": 66, "right": 10, "width": 350},
-                                                ),
-                                            ],
+                                                                dbc.Input(type="email", id="emailinput"),
+                                                                html.P(' '),
+                                                                dbc.Button("Notify Me", id="notify",n_clicks=0, color="primary"),
+                                                                
+                                                                ]),
+                                             
+                                                ],
+                                            id="offcanvas1",
+                                            title="Track",
+                                            is_open=False,
+                                            placement="top"),],
                                 size="lg",
                                 style = {"color":"danger"},
                                 className="gap-2 col-6 mx-auto",
@@ -238,18 +229,20 @@ app.layout = html.Div(
                     min_date_allowed=date(2021, 11, 15),
                     max_date_allowed=date(2022, 9, 19),
                     initial_visible_month=date(2022, 1, 5),
-                    start_date= date(2022, 1, 1),
-                    end_date=date_today,
+                    start_date= date(2022, 2, 24),
+                    #end_date=date_today,
+                    end_date = date(2022, 3, 16),
                     style = {
                         "color": "green",
                         "background-color": "#010915",
                         "display": "flex",
                       },
              className = "dcc_compon"
-    )
+        ),
           ],
           className = "create_container three columns"
         ),
+        
         
  #=========================Charts=========================-====================       
         
@@ -270,7 +263,7 @@ app.layout = html.Div(
         # (Column three) Pie chart
 
       ],
-      className = "row flex-display"
+      className = "row flex-display .col-sm-"
     )
   ],
   id = "mainContainer",
@@ -316,7 +309,7 @@ def get_prodnames(shop):
     component_id = "bar_chart",
     component_property = "figure"
   ),
-  Output(
+    Output(
     component_id = "prods",
     component_property = "children"
   ),
@@ -342,9 +335,9 @@ def get_prodnames(shop):
 def create_plot(shop, productnames, start_date, end_date):
     print(end_date)
     print(start_date)
+    print(productnames)
     response = requests.get(f'https://openpricengine.com/api/v0.1/{shop}/products/query?list={productnames}&range={start_date}to{end_date}')
     json_list1 = response.json()
-    #print(json_list1)
     df = pd.DataFrame.from_records(json_list1)
     print(df)
     emp = []
@@ -374,6 +367,7 @@ def create_plot(shop, productnames, start_date, end_date):
     return fig, f'{selectedprods}'
 
 
+
 @app.callback(
     Output("offcanvas", "is_open"),
     Input("open-offcanvas", "n_clicks"),
@@ -384,22 +378,18 @@ def toggle_offcanvas(n1, is_open):
         return not is_open
     return is_open
     
-    
+ 
+
 @app.callback(
-    Output("simple-toast", "is_open"),
-    [Input("simple-toast-toggle", "n_clicks")],
+    Output("offcanvas1", "is_open"),
+    Input("open-offcanvas1", "n_clicks"),
+    [State("offcanvas1", "is_open")],
 )
-def open_toast(n):
-    if n == 0:
-        return no_update
-    return True
-
-
-def toggle_offcanvas(n1, is_open):
+def toggle_offcanvas1(n1, is_open):
     if n1:
         return not is_open
     return is_open
-    
+     
     
 @app.callback(
     Output("simple-toast1", "is_open"),
@@ -409,6 +399,61 @@ def open_toast(n):
     if n == 0:
         return no_update
     return True
+    
+
+
+
+@app.callback(
+  Output(
+    component_id = "progress",
+    component_property = "value"
+  ),
+  Input(
+    component_id = "productnames",
+    component_property = "value"
+  ),
+    Input(
+    component_id = "emailinput",
+    component_property = "value"
+  ),
+  Input(
+    component_id = "notify",
+    component_property = "n_clicks"
+  )
+)
+
+
+
+def send_user_a_email(emailinput, productnames, notify):
+    if notify == 0:
+        return no_update
+    msg = EmailMessage()
+    message = """We will notify you when the following product prices change 😎. %s
+    Visit: https//:www.openpricengine.com. To gain access to the same API we use! 
+
+    """ % (emailinput)
+    msg.set_content(message)
+    print(emailinput, productnames, notify)
+    msg['Subject'] = 'Price Tracker Notification.'
+    msg['From'] = 'pricedata@learningtool.co.za'
+    msg['To'] = [f'{productnames}']
+    # Send the message via our own SMTP server.
+    s = smtplib.SMTP('mail.learningtool.co.za', 25)
+    print('about to login')
+    s.login('pricedata@learningtool.co.za', 'BEo3kno')
+    with open('test.jpeg', 'rb') as f:
+        img_data = f.read()
+    msg.add_attachment(img_data, maintype='image', subtype='jpeg', filename='test.jpeg')
+    s.send_message(msg)
+    print('sent')
+    s.quit()
+    x = 'GREAT!'
+    return 100
+
+
+
+
+
 
 
 
