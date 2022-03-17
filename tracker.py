@@ -98,6 +98,7 @@ app.layout = html.Div(
                                                     icon="success",
                                                     dismissable=True,
                                                     is_open=False,
+                                                    #syle="Secondary"
                                                 ),],
                                             id="offcanvas",
                                             title="About Daily Price Tracker",
@@ -429,7 +430,9 @@ def send_user_a_email(emailinput, productnames, notify):
         return no_update
     msg = EmailMessage()
     message = """We will notify you when the following product prices change 😎. %s
-    Visit: https//:www.openpricengine.com. To gain access to the same API we use! 
+    Visit: https://www.openpricengine.com/. To gain access to the same API we use! 
+    
+    Maybe developer does deserve a pizza 😉?
 
     """ % (emailinput)
     msg.set_content(message)
