@@ -44,9 +44,9 @@ date_today = date.today().strftime("%Y-%m-%d")
 
 
 
-
+#VAPOR, QUARTZ
 # Instanciate the app
-app = dash.Dash(__name__,  external_stylesheets=[dbc.themes.BOOTSTRAP], meta_tags = [{"name": "viewport", 'content': 'width=device-width, initial-scale=1.0, maximum-scale=1.2, minimum-scale=0.5,' }])
+app = dash.Dash(__name__,  external_stylesheets=[dbc.themes.VAPOR], meta_tags = [{"name": "viewport", 'content': 'width=device-width, initial-scale=1.0, maximum-scale=1.2, minimum-scale=0.5,' }])
 
 # Build layout
 app.layout = html.Div(
@@ -441,13 +441,12 @@ def send_user_a_email(emailinput, productnames, notify):
     s = smtplib.SMTP('mail.learningtool.co.za', 25)
     print('about to login')
     s.login('pricedata@learningtool.co.za', 'BEo3kno')
-    with open('test.jpeg', 'rb') as f:
+    with open('ope.jpeg', 'rb') as f:
         img_data = f.read()
-    msg.add_attachment(img_data, maintype='image', subtype='jpeg', filename='test.jpeg')
+    msg.add_attachment(img_data, maintype='image', subtype='jpeg', filename='ope.jpeg')
     s.send_message(msg)
     print('sent')
     s.quit()
-    x = 'GREAT!'
     return 100
 
 
