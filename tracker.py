@@ -109,7 +109,7 @@ app.layout = html.Div(
                                  dbc.Offcanvas(
                                             [dbc.Progress(id="progress", style={"height": "30px"}),
                                             html.P("If you would like price change notifications on the following selected "
-                                                     "products, click 'Notify'"),
+                                                     "products, click 'Notify Me'"),
                                              html.P(id="prods"),
                                              html.P(' '),
                                              dbc.Row([
@@ -207,7 +207,7 @@ app.layout = html.Div(
             ),
             # products dropdown
             dcc.Dropdown(id = "productnames", 
-                           value = "PnP UHT Full Cream Milk 1l x 6",
+                           value = ['Jacobs Kronung Instant Coffee 200g', 'PnP Potatoes 7kg'],
                          multi=True,
                          style = {
 								"color": "white"}
@@ -231,8 +231,8 @@ app.layout = html.Div(
                     max_date_allowed=date(2022, 9, 19),
                     initial_visible_month=date(2022, 1, 5),
                     start_date= date(2022, 2, 24),
-                    #end_date=date_today,
-                    end_date = date(2022, 3, 16),
+                    end_date=date_today,
+                    #end_date = date(2022, 3, 16),
                     style = {
                         "color": "green",
                         "background-color": "#010915",
@@ -261,7 +261,7 @@ app.layout = html.Div(
         )
         
         
-        # (Column three) Pie chart
+       #===== (Column three) Pie chart
 
       ],
       className = "row flex-display .col-sm-"
@@ -332,7 +332,7 @@ def get_prodnames(shop):
   )
 )
 
-
+# This function creates the figure
 def create_plot(shop, productnames, start_date, end_date):
     print(end_date)
     print(start_date)
@@ -424,7 +424,7 @@ def open_toast(n):
 )
 
 
-
+#This function sends user an email
 def send_user_a_email(emailinput, productnames, notify):
     if notify == 0:
         return no_update
