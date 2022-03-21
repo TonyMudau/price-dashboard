@@ -10,6 +10,8 @@ import datetime
 import dash_bootstrap_components as dbc
 from dash import Output, State, html, no_update, dcc
 import random
+import webbrowser
+import ast
 # Import the email modules we'll need
 import smtplib
 from email.message import EmailMessage
@@ -22,22 +24,8 @@ from email.message import EmailMessage
 """
 #==========================================================================
 
-#requests ope data and creates a df
-def request_data_ope(store, prodslist,date_range):
-    response = requests.get(f'https://openpricengine.com/api/v0.1/{store}/products/query?list={prodlist}&range={date_range}')
-    json_list = response.json()
-    df = pd.DataFrame.from_records(json_list)
-    emp = []
-    for i in range(len(df)):
-        price_date = df['Price over time'][i]
-        details = df.iloc[:,:4].iloc[i]
-        dates = pd.DataFrame.from_records(price_date).set_index('Date').T.reset_index(drop=True)
-        tails = pd.DataFrame(details).T.reset_index(drop=True)
-        v = pd.concat([tails,dates], axis=1)
-        emp.append(v)
-    final = pd.concat(emp)
-    return final
-    
+
+###=========GLOBAL FUNCTIONS=======================########
 
 
 date_today = date.today().strftime("%Y-%m-%d")
@@ -62,7 +50,7 @@ app.layout = html.Div(
 								# Title
                                 
 								html.H1(
-									children = "Daily Price Tracker 🍕",
+									children = "Daily Price Tracker 🍜",
 									style = {
 										"margin-bottom": "0px",
 										"color": "white",
@@ -107,7 +95,7 @@ app.layout = html.Div(
                                 #---Track button
                              dbc.Button("Track", id="open-offcanvas1", n_clicks=0),
                                  dbc.Offcanvas(
-                                            [dbc.Progress(id="progress", style={"height": "30px"}),
+                                            [html.Span(id="thanks", style={"verticalAlign": "middle"}),
                                             html.P("If you would like price change notifications on the following selected "
                                                      "products, click 'Notify Me'"),
                                              html.P(id="prods"),
@@ -124,7 +112,7 @@ app.layout = html.Div(
                                             id="offcanvas1",
                                             title="Track",
                                             is_open=False,
-                                            placement="top"),],
+                                            placement="end"),],
                                 size="lg",
                                 style = {"color":"danger"},
                                 className="gap-2 col-6 mx-auto",
@@ -211,9 +199,7 @@ app.layout = html.Div(
                          multi=True,
                          style = {
 								"color": "white"}
-                         ),
-                        
-                        
+                         ),                    
             
             # Title for Date range
             html.P(
@@ -229,7 +215,7 @@ app.layout = html.Div(
                     id='dates_range',
                     min_date_allowed=date(2021, 11, 15),
                     max_date_allowed=date(2022, 9, 19),
-                    initial_visible_month=date(2022, 1, 5),
+                    initial_visible_month=date(2022, 2, 24),
                     start_date= date(2022, 2, 24),
                     end_date=date_today,
                     #end_date = date(2022, 3, 16),
@@ -239,8 +225,8 @@ app.layout = html.Div(
                         "display": "flex",
                       },
              className = "dcc_compon"
-        ),
-          ],
+        ), 
+        html.Span(id="prod", style={"verticalAlign": "middle"}),],
           className = "create_container three columns"
         ),
         
@@ -290,7 +276,7 @@ app.layout = html.Div(
 
 # This function sends a request to the OPE which returns product names of a store for users to select
 def get_prodnames(shop):
-    response = requests.get(f'https://openpricengine.com/api/v0.1/{shop}/products')
+    response = requests.get(f'https://openpricengine.com/api/v0.1/{shop}/products', timeout=150)
     json_list = response.json()
     prod = json_list.values()
     prod_names = list(prod)
@@ -329,18 +315,14 @@ def get_prodnames(shop):
   Input(
     component_id = "dates_range",
     component_property = "end_date"
-  )
+  ),
 )
 
 # This function creates the figure
 def create_plot(shop, productnames, start_date, end_date):
-    print(end_date)
-    print(start_date)
-    print(productnames)
     response = requests.get(f'https://openpricengine.com/api/v0.1/{shop}/products/query?list={productnames}&range={start_date}to{end_date}')
     json_list1 = response.json()
     df = pd.DataFrame.from_records(json_list1)
-    print(df)
     emp = []
     for i in range(len(df)):
         price_date = df['Price over time'][i]
@@ -365,9 +347,14 @@ def create_plot(shop, productnames, start_date, end_date):
         y=1.02,
         xanchor="right",
         x=1))
-    return fig, f'{selectedprods}'
+    selected = []
+    for i in selectedprods:
+        selected.append(i + ', ')
+    print(selected)
+    return fig, [i for i in selected]
 
 
+#-------------------------------------------------------------------------------------
 
 @app.callback(
     Output("offcanvas", "is_open"),
@@ -379,7 +366,7 @@ def toggle_offcanvas(n1, is_open):
         return not is_open
     return is_open
     
- 
+#------------------------------------------------------------------------------------
 
 @app.callback(
     Output("offcanvas1", "is_open"),
@@ -391,7 +378,8 @@ def toggle_offcanvas1(n1, is_open):
         return not is_open
     return is_open
      
-    
+#------------------------------------------------------------------------------------
+   
 @app.callback(
     Output("simple-toast1", "is_open"),
     [Input("simple-toast-toggle1", "n_clicks")],
@@ -400,14 +388,14 @@ def open_toast(n):
     if n == 0:
         return no_update
     return True
-    
 
+#--------------------------------------------------------------------------------
 
 
 @app.callback(
   Output(
-    component_id = "progress",
-    component_property = "value"
+    component_id = "thanks",
+    component_property = "children"
   ),
   Input(
     component_id = "productnames",
@@ -450,7 +438,7 @@ def send_user_a_email(emailinput, productnames, notify):
     s.send_message(msg)
     print('sent')
     s.quit()
-    return 100
+    return "Awesome! You will be notified 🥂"
 
 
 
@@ -462,4 +450,4 @@ def send_user_a_email(emailinput, productnames, notify):
 
 # Run the app
 if __name__ == "__main__":
-  app.run_server(debug = True, port=8080)
+  app.run_server(debug =True, port=8080)
