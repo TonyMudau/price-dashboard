@@ -35,7 +35,7 @@ date_today = date.today().strftime("%Y-%m-%d")
 #VAPOR, QUARTZ
 # Instanciate the app
 app = dash.Dash(__name__,  external_stylesheets=[dbc.themes.VAPOR], meta_tags = [{"name": "viewport", 'content': 'width=device-width, initial-scale=1.0, maximum-scale=1.2, minimum-scale=0.5,' }])
-
+app.title = "Daily Price Tracker"
 # Build layout
 app.layout = html.Div(
 	[
@@ -217,8 +217,8 @@ app.layout = html.Div(
                     max_date_allowed=date(2022, 9, 19),
                     initial_visible_month=date(2022, 2, 24),
                     start_date= date(2022, 2, 24),
-                    end_date=date_today,
-                    #end_date = date(2022, 3, 16),
+                    #end_date=date_today,
+                    end_date = date(2022, 3, 21),
                     style = {
                         "color": "green",
                         "background-color": "#010915",
@@ -450,4 +450,4 @@ def send_user_a_email(emailinput, productnames, notify):
 
 # Run the app
 if __name__ == "__main__":
-  app.run_server(debug =True, port=8080)
+  app.run_server(debug =False, port=8080)
