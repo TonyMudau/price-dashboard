@@ -48,7 +48,7 @@ app.layout = html.Div(
 						html.Div(
 							[
 								# Title
-                                
+                               dcc.Loading(id="loading-1", type="graph", children=html.Div(id="loading-output-1"), color="white"),
 								html.H1(
 									children = "Daily Price Board 🥩",
 									style = {
@@ -104,11 +104,11 @@ app.layout = html.Div(
                                              html.P(id="prods"),
                                              html.P(' '),
                                              dbc.Row([
-                                                                dbc.Label("Email address"),
-                                                                dbc.Input(type="email", id="emailinput"),
-                                                                html.P(' '),
-                                                                dbc.Button("Notify Me", id="notify",n_clicks=0, color="primary"),
-                                                                
+                                                        dbc.Label("Email address"),
+                                                        dbc.Input(type="email", id="emailinput"),
+                                                        html.P(' '),
+                                                        dbc.Button("Notify Me", id="notify",n_clicks=0, color="primary"),
+                                                        
                                                                 ]),
                                              
                                                 ],
@@ -220,8 +220,8 @@ app.layout = html.Div(
                     max_date_allowed=date(2022, 9, 19),
                     initial_visible_month=date(2022, 2, 24),
                     start_date= date(2022, 2, 24),
-                    #end_date=date_today,
-                    end_date = date(2022, 3, 21),
+                    end_date=date_today,
+                    #end_date = date(2022, 3, 21),
                     style = {
                         "color": "green",
                         "background-color": "#010915",
@@ -229,7 +229,7 @@ app.layout = html.Div(
                       },
              className = "date_range"
         ), 
-        html.Span(id="prod", style={"verticalAlign": "middle"}),],
+        ],
           className = "create_container three columns"
         ),
         
@@ -303,6 +303,11 @@ def get_prodnames(shop):
     component_id = "prods",
     component_property = "children"
   ),
+  Output(
+    component_id = "loading-output-1",
+    component_property = "children"
+  ),
+  #Input("loading-input-1", "value"),
   Input(
     component_id = "shop",
     component_property = "value"
@@ -323,9 +328,15 @@ def get_prodnames(shop):
 
 # This function creates the figure
 def create_plot(shop, productnames, start_date, end_date):
-    response = requests.get(f'https://openpricengine.com/api/v0.1/{shop}/products/query?list={productnames}&range={start_date}to{end_date}')
-    json_list1 = response.json()
-    df = pd.DataFrame.from_records(json_list1)
+    try:
+        response = requests.get(f'https://openpricengine.com/api/v0.1/{shop}/products/query?list={productnames}&range={start_date}to{end_date}')
+        json_list1 = response.json()
+        df = pd.DataFrame.from_records(json_list1)
+    except:
+        print("except")
+        response = requests.get(f'https://openpricengine.com/api/v0.1/{shop}/products/query?list={productnames}&range=2022-02-25to{end_date}')
+        json_list1 = response.json()
+        df = pd.DataFrame.from_records(json_list1)
     emp = []
     for i in range(len(df)):
         price_date = df['Price over time'][i]
@@ -354,7 +365,8 @@ def create_plot(shop, productnames, start_date, end_date):
     for i in selectedprods:
         selected.append(i + ', ')
     print(selected)
-    return fig, [i for i in selected]
+    value = ""
+    return fig, [i for i in selected], value
 
 
 #-------------------------------------------------------------------------------------
@@ -429,7 +441,7 @@ def send_user_a_email(emailinput, productnames, notify):
     msg.set_content(message)
     print(emailinput, productnames, notify)
     msg['Subject'] = 'Price Tracker Notification.'
-    msg['From'] = 'pricedata@learningtool.co.za'
+    msg['From'] = '_amazonses.pricedata@learningtool.co.za'
     msg['To'] = [f'{productnames}']
     # Send the message via our own SMTP server.
     s = smtplib.SMTP('email-smtp.us-east-1.amazonaws.com', 25)
@@ -453,4 +465,4 @@ def send_user_a_email(emailinput, productnames, notify):
 
 # Run the app
 if __name__ == "__main__":
-  app.run_server(debug =True, port=8080)
+  app.run_server(debug =True, port=8000)

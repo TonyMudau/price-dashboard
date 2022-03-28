@@ -5,12 +5,12 @@ body {
 }
 
 .create_container {
-  border-radius: 5px;
+  border-radius: 17px;
   background-color: #00B2EE;
   margin: 12spx;
   padding: 15px;
   position: relative;
-  box-shadow: 2px 2px 2px #104E8B;
+  box-shadow: 3px 3px 3px #104E8B;
 }
 
 .dcc_compon {
