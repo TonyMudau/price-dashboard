@@ -34,7 +34,7 @@ date_today = date.today().strftime("%Y-%m-%d")
 
 #VAPOR, QUARTZ
 # Instanciate the app
-app = dash.Dash(__name__,  external_stylesheets=[dbc.themes.VAPOR], meta_tags = [{"name": "viewport", 'content': 'width=device-width, initial-scale=1.0, maximum-scale=1.2, minimum-scale=0.5,' }])
+app = dash.Dash(__name__,  external_stylesheets=[dbc.themes.BOOTSTRAP], meta_tags = [{"name": "viewport", 'content': 'width=device-width, initial-scale=1.0, maximum-scale=1.2, minimum-scale=0.5,' }])
 app.title = "Daily Price Tracker"
 # Build layout
 app.layout = html.Div(
@@ -50,10 +50,10 @@ app.layout = html.Div(
 								# Title
                                 
 								html.H1(
-									children = "Daily Price Tracker 🍜",
+									children = "Daily Price Board 🥩",
 									style = {
 										"margin-bottom": "0px",
-										"color": "white",
+										"color": "#104E8B",
                                         "font-weight": "bold"
                                         
 									}
@@ -63,7 +63,7 @@ app.layout = html.Div(
 									children = f"{date_today}",
 									style = {
 										"margin-top": "0px",
-										"color": "white",
+										"color": "#104E8B",
                                         
 									}
 								),
@@ -76,11 +76,14 @@ app.layout = html.Div(
                                                 "Daily Price tracker is a free to use dashboard that allows consumers to see the historical "
                                                 "prices of their favourite products from retail stores. This is to help consumers compare prices and find the best time "
                                                 "to buy a product at the best price. "
-                                                "The Daily Price tracker  uses the Openpricengine API to get realtime price data."
-                                                "You are able to set email notifications for price changes on products. "),
-                                            dbc.Button("Buy developer a pizza 😉",id="simple-toast-toggle1",n_clicks=0),
+                                                "The Daily Price tracker  uses the Openpricengine API to get realtime price data. "
+                                                "If you would like access to this data, visit www.openpricengine.com. "
+                                                " "
+                                                "I have also created a feature where you are able to set email notifications for price changes on products using the Track button. "),
+                                                
+                                            dbc.Button("Buy Me a pizza 😉",id="simple-toast-toggle1",n_clicks=0),
                                                 dbc.Toast(
-                                                    [html.P("FNB"),html.P("Acc 62530854589")],
+                                                    [html.P("FNB"), html.P("Acc 62530854589"), html.P("Ref: Tracker")],
                                                     id="simple-toast1",
                                                     header="Donate",
                                                     icon="success",
@@ -114,7 +117,7 @@ app.layout = html.Div(
                                             is_open=False,
                                             placement="end"),],
                                 size="lg",
-                                style = {"color":"danger"},
+                                style = {"color":"info"},
                                 className="gap-2 col-6 mx-auto",
                             ),
                               ],   
@@ -224,7 +227,7 @@ app.layout = html.Div(
                         "background-color": "#010915",
                         "display": "flex",
                       },
-             className = "dcc_compon"
+             className = "date_range"
         ), 
         html.Span(id="prod", style={"verticalAlign": "middle"}),],
           className = "create_container three columns"
@@ -429,9 +432,9 @@ def send_user_a_email(emailinput, productnames, notify):
     msg['From'] = 'pricedata@learningtool.co.za'
     msg['To'] = [f'{productnames}']
     # Send the message via our own SMTP server.
-    s = smtplib.SMTP('mail.learningtool.co.za', 25)
+    s = smtplib.SMTP('email-smtp.us-east-1.amazonaws.com', 25)
     print('about to login')
-    s.login('pricedata@learningtool.co.za', 'BEo3kno')
+    s.login('AKIAVK6PVLVL2276MGBX', 'BCO3S6dqzig68AzyK9XoqWIcGFPBB8aXUeXY4WDHWael')
     with open('ope.jpeg', 'rb') as f:
         img_data = f.read()
     msg.add_attachment(img_data, maintype='image', subtype='jpeg', filename='ope.jpeg')
@@ -450,4 +453,4 @@ def send_user_a_email(emailinput, productnames, notify):
 
 # Run the app
 if __name__ == "__main__":
-  app.run_server(debug =False, port=8080)
+  app.run_server(debug =True, port=8080)

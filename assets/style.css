@@ -1,16 +1,16 @@
 
 body {
-  background-color: #272B30;
+  background-color: white;
   margin: 5%;
 }
 
 .create_container {
   border-radius: 5px;
-  background-color: #010915;
+  background-color: #00B2EE;
   margin: 12spx;
   padding: 15px;
   position: relative;
-  box-shadow: 2px 2px 2px #010915;
+  box-shadow: 2px 2px 2px #104E8B;
 }
 
 .dcc_compon {
@@ -60,7 +60,7 @@ body {
 }
 
 .Select-control{
-  border: 0.5px solid green;
+  border: 0.5px solid blue;
 }
 
 .has-value.Select--single>.Select-control .Select-value .Select-value-label,
