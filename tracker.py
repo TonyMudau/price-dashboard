@@ -37,6 +37,25 @@ date_today = date.today().strftime("%Y-%m-%d")
 app = dash.Dash(__name__,  external_stylesheets=[dbc.themes.BOOTSTRAP], meta_tags = [{"name": "viewport", 'content': 'width=device-width, initial-scale=1.0, maximum-scale=1.2, minimum-scale=0.5,' }])
 app.title = "Daily Price Tracker"
 # Build layout
+
+
+#dash.html.Header("<!-- Global site tag (gtag.js) - Google Analytics --> <script async src='https://www.googletagmanager.com/gtag/js?id=G-K48BM353GW' ></script> <script> window.dataLayer = window.dataLayer || []; function gtag(){dataLayer.push(arguments);} gtag('js', new Date());  gtag('config', 'G-K48BM353GW'); </script>")
+dash.html.Header("""
+<!-- Global site tag (gtag.js) - Google Analytics -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-K48BM353GW"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-K48BM353GW');
+</script>
+
+
+""")
+
+
+
 app.layout = html.Div(
 	[
 		# (First Row): Title
